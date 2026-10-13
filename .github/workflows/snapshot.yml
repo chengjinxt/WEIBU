@@ -1,0 +1,20 @@
+# GitHub Actions：每 5 分钟触发站内价格快照接口
+# （Vercel 免费档 cron 只支持每日及更低频率，高频部分由这里补齐）
+# 需要在仓库 Settings → Secrets → Actions 配置 CRON_SECRET（与 Vercel 环境变量同值）
+# 需要在仓库 Settings → Variables → Actions 配置 SITE_URL（如 https://weibu-xxx.vercel.app）
+
+name: snapshot-prices
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: trigger snapshot
+        run: |
+          curl -sS -m 50 -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ vars.SITE_URL }}/api/cron/snapshot"

@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Platform {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique // polymarket | kalshi
+  name      String
+  baseUrl   String
+  events    Event[]
+  markets   Market[]
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id            Int       @id @default(autoincrement())
+  platformId    Int
+  platform      Platform  @relation(fields: [platformId], references: [id])
+  externalId    String
+  slug          String
+  title         String
+  titleZh       String?
+  description   String?   @db.Text
+  descriptionZh String?   @db.Text
+  category      String?
+  tags          Json      @default("[]")
+  startTime     DateTime?
+  endTime       DateTime?
+  status        String    @default("open")
+  volume        Float     @default(0)
+  volume24h     Float     @default(0)
+  liquidity     Float     @default(0)
+  sourceUrl     String?
+  translatedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  markets       Market[]
+
+  @@unique([platformId, externalId])
+  @@index([status, volume24h])
+}
+
+model Market {
+  id            Int             @id @default(autoincrement())
+  eventId       Int
+  event         Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  platformId    Int
+  platform      Platform        @relation(fields: [platformId], references: [id])
+  externalId    String
+  question      String
+  questionZh    String?
+  outcomes      Json            @default("[]") // ["Yes","No"]
+  outcomePrices Json            @default("[]") // [0.65,0.35]
+  volume        Float           @default(0)
+  volume24h     Float           @default(0)
+  liquidity     Float           @default(0)
+  status        String          @default("open")
+  updatedAt     DateTime        @updatedAt
+  snapshots     PriceSnapshot[]
+
+  @@unique([platformId, externalId])
+  @@index([eventId])
+}
+
+model PriceSnapshot {
+  id       Int      @id @default(autoincrement())
+  marketId Int
+  market   Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  ts       DateTime
+  prices   Json // [0.65,0.35]
+  volume   Float    @default(0)
+
+  @@index([marketId, ts])
+}
+
+model CrossLink {
+  id        Int    @id @default(autoincrement())
+  marketAId Int
+  marketBId Int
+  matchType String @default("manual") // manual | rule | ml
+
+  @@unique([marketAId, marketBId])
+}
