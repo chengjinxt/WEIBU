@@ -20,7 +20,7 @@
   "name": "weibu",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "dev": "next dev",
