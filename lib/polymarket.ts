@@ -11,7 +11,13 @@ export interface ParsedMarket {
   volume: number;
   volume24h: number;
   liquidity: number;
+  priceChange24h: number | null; // 分数，如 0.05 = +5%
   status: string;
+}
+
+export interface Tag {
+  label: string;
+  slug: string;
 }
 
 export interface ParsedEvent {
@@ -25,6 +31,7 @@ export interface ParsedEvent {
   volume24h: number;
   liquidity: number;
   status: string;
+  tags: Tag[];
   markets: ParsedMarket[];
 }
 
@@ -61,6 +68,15 @@ function numArr(v: unknown): number[] {
     .filter((n) => Number.isFinite(n));
 }
 
+function numOrNull(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 export function parseMarket(raw: any): ParsedMarket | null {
   if (!raw || typeof raw !== "object") return null;
   const externalId = str(raw.id) || str(raw.conditionId);
@@ -74,6 +90,7 @@ export function parseMarket(raw: any): ParsedMarket | null {
     volume: num(raw.volume ?? raw.volumeNum),
     volume24h: num(raw.volume24hr ?? raw.volume24hrNum),
     liquidity: num(raw.liquidity ?? raw.liquidityNum),
+    priceChange24h: numOrNull(raw.oneDayPriceChange),
     status: raw.closed === true ? "closed" : "open",
   };
 }
@@ -84,7 +101,12 @@ export function parseEvent(raw: any): ParsedEvent | null {
   const title = str(raw.title);
   if (!externalId || !title) return null;
   const markets = Array.isArray(raw.markets)
-    ? raw.markets.map(parseMarket).filter((m): m is ParsedMarket => m !== null)
+    ? raw.markets.map(parseMarket).filter((m: ParsedMarket | null): m is ParsedMarket => m !== null)
+    : [];
+  const tags: Tag[] = Array.isArray(raw.tags)
+    ? raw.tags
+        .map((t: any) => ({ label: str(t?.label), slug: str(t?.slug) }))
+        .filter((t: Tag) => t.label)
     : [];
   return {
     externalId,
@@ -97,6 +119,7 @@ export function parseEvent(raw: any): ParsedEvent | null {
     volume24h: num(raw.volume24hr ?? raw.volume24hrNum),
     liquidity: num(raw.liquidity ?? raw.liquidityNum),
     status: raw.closed === true ? "closed" : "open",
+    tags,
     markets,
   };
 }

@@ -62,7 +62,7 @@ export function parseKalshiEvent(raw: any): ParsedKalshiEvent | null {
   const eventTicker = str(raw.event_ticker);
   if (!eventTicker) return null;
   const markets = Array.isArray(raw.markets)
-    ? raw.markets.map(parseKalshiMarket).filter((m): m is ParsedKalshiMarket => m !== null)
+    ? raw.markets.map(parseKalshiMarket).filter((m: ParsedKalshiMarket | null): m is ParsedKalshiMarket => m !== null)
     : [];
   return {
     eventTicker,
@@ -88,7 +88,7 @@ export async function fetchKalshiEvents(
   });
   const raw = await getJSON(`${KALSHI_BASE}/events?${params}`);
   const events = Array.isArray(raw?.events)
-    ? raw.events.map(parseKalshiEvent).filter((e): e is ParsedKalshiEvent => e !== null)
+    ? raw.events.map(parseKalshiEvent).filter((e: ParsedKalshiEvent | null): e is ParsedKalshiEvent => e !== null)
     : [];
   return { events, cursor: typeof raw?.cursor === "string" && raw.cursor ? raw.cursor : null };
 }

@@ -35,6 +35,28 @@ test("polymarket parseMarket：outcomes/outcomePrices 为 JSON 字符串时能�
   assert.deepEqual(m.prices, [0.1415, 0.8585]);
 });
 
+test("polymarket parseMarket：解析 oneDayPriceChange 与缺失时为 null", () => {
+  const m1 = parseMarket({ id: "1", question: "Q?", oneDayPriceChange: -0.025 });
+  assert.equal(m1?.priceChange24h, -0.025);
+  const m2 = parseMarket({ id: "2", question: "Q?" });
+  assert.equal(m2?.priceChange24h, null);
+  const m3 = parseMarket({ id: "3", question: "Q?", oneDayPriceChange: "0.1" });
+  assert.equal(m3?.priceChange24h, 0.1);
+});
+
+test("polymarket parseEvent：解析 tags 数组", () => {
+  const e = parseEvent({
+    id: "e1",
+    title: "Some event",
+    tags: [
+      { id: "1", label: "Politics", slug: "politics" },
+      { id: "2", label: "", slug: "empty" },
+    ],
+    markets: [],
+  });
+  assert.deepEqual(e?.tags, [{ label: "Politics", slug: "politics" }]);
+});
+
 test("polymarket parseMarket：缺失关键字段返回 null", () => {
   assert.equal(parseMarket(null), null);
   assert.equal(parseMarket({}), null);

@@ -59,6 +59,7 @@ model Market {
   volume        Float           @default(0)
   volume24h     Float           @default(0)
   liquidity     Float           @default(0)
+  priceChange24h Float?         // 24h 价格变动（分数，如 0.05 = +5%）；Polymarket oneDayPriceChange，Kalshi 暂无
   status        String          @default("open")
   updatedAt     DateTime        @updatedAt
   snapshots     PriceSnapshot[]
